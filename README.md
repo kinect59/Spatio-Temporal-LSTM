@@ -1,3 +1,3 @@
 # Demo code for:
-  (ECCV 2016) Spatio-Temporal LSTM with Trust Gates for 3D Human Action Recognition
+  Jun Liu, Amir Shahroudy, Dong Xu, Gang Wang,  Spatio-temporal LSTM with trust gates for 3D human action recognition, ECCV, 2016.
 #  Unfinished ...
