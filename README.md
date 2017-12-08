@@ -1,2 +1,1 @@
-# Demo code for (ECCV 2016) Spatio-Temporal LSTM with Trust Gates for 3D Human Action Recognition
-# Unfinished ...
+# Spatio-Temporal LSTM
