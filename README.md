@@ -1,3 +1,2 @@
-# Demo code for:
-  Jun Liu, Amir Shahroudy, Dong Xu, Gang Wang,  Spatio-temporal LSTM with trust gates for 3D human action recognition, ECCV, 2016.
-#  Unfinished ...
+# Demo code for spatio-temporal LSTM (ST-LSTM):
+J. Liu, A. Shahroudy, D. Xu, and G. Wang, "Spatio-temporal LSTM with trust gates for 3D human action recognition", ECCV, 2016.
