@@ -1,22 +1,17 @@
 # Code for spatio-temporal LSTM (ST-LSTM).
 
-Conference Version
 
 @inproceedings{liu2016spatio,
+
   title={Spatio-Temporal LSTM with Trust Gates for 3D Human Action Recognition},
+  
   author={Liu, Jun and Shahroudy, Amir and Xu, Dong and Wang, Gang},
+  
   booktitle={ECCV},
+  
   year={2016},
 }
 
-Journal Version
-
-@article{liu2017skeleton,
-  title={Skeleton-Based Action Recognition Using Spatio-Temporal LSTM Network with Trust Gates},
-  author={Liu, Jun and Shahroudy, Amir and Xu, Dong and Chichung, Alex Kot and Wang, Gang},
-  journal={T-PAMI},
-  year={2017},
-}
 
 
 #Note
@@ -31,5 +26,7 @@ please put the files "skl.csv", "descs.csv", and "training_testing_subjects.csv"
 "training_testing_subjects.csv" is the split of the train/test subjects for the [NTU RGB+D dataset](https://github.com/shahroudy/NTURGB-D).
 
 Related Publications:
+
 J. Liu, A. Shahroudy, D. Xu, A. Kot, G. Wang, Skeleton-based action recognition using spatio-temporal LSTM network with trust gates, T-PAMI, 2017.
+
 J. Liu, G. Wang, P. Hu, L. Duan, A. Kot, Global context-aware attention LSTM networks for 3D action recognition, CVPR, 2017.
