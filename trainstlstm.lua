@@ -30,6 +30,7 @@ require 'util.misc'
 local SkeletonMinibatchLoader = require 'util.SkeletonMinibatchLoader'
 local model_utils = require 'util.model_utils'
 local STLSTM = require 'model.STLSTM'
+--local STLSTM = require 'model.STLSTM3'
 
 cmd = torch.CmdLine()
 cmd:text()
