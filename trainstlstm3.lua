@@ -11,9 +11,6 @@ The practical6 code is in turn based on
 https://github.com/wojciechz/learning_to_execute
 which is turn based on other stuff in Torch, etc... (long lineage)
 
-Code is based on char-rnn:
-https://github.com/karpathy/char-rnn
-
 ]]--
 
 package.loaded.SkeletonMinibatchLoader = nil
@@ -29,8 +26,12 @@ require 'util.misc'
 
 local SkeletonMinibatchLoader = require 'util.SkeletonMinibatchLoader'
 local model_utils = require 'util.model_utils'
-local STLSTM = require 'model.STLSTM'
---local STLSTM = require 'model.STLSTM3'
+local LSTM = require 'model.LSTM'
+local GRU  = require 'model.GRU'
+local RNN  = require 'model.RNN'
+local STLSTM  = require 'model.STLSTM'
+local STLSTM2 = require 'model.STLSTM2'
+local STLSTM3 = require 'model.STLSTM3'
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -41,28 +42,28 @@ cmd:text('Options')
 cmd:option('-data_dir','data','data directory')
 -- model params
 cmd:option('-rnn_size', 128, 'size of LSTM internal state')
-cmd:option('-num_layers', 2, 'number of layers in the LSTM') --tttttttttttttttttttttt
-cmd:option('-model', 'stlstm', 'lstm, gru or rnn')
+cmd:option('-num_layers', 2, 'number of layers in the LSTM') --
+cmd:option('-model', 'stlstm3', 'lstm, gru or rnn')
 -- optimization
-cmd:option('-learning_rate', 2e-3, 'learning rate')  -- 2e-3  !!!!!!!!!!!!!!!
-cmd:option('-learning_rate_decay', 0.97, 'learning rate decay')
-cmd:option('-learning_rate_decay_after', 1, 'in number of epochs, when to start decaying the learning rate')
+cmd:option('-learning_rate', 2e-3, 'learning rate')  -- 
+cmd:option('-learning_rate_decay', 0.998, 'learning rate decay')
+cmd:option('-learning_rate_decay_after', 50, 'in number of epochs, when to start decaying the learning rate')
 cmd:option('-decay_rate', 0.95, 'decay rate for rmsprop')
-cmd:option('-dropout', 0, 'dropout for regularization, used after each RNN hidden layer. 0 = no dropout')
-cmd:option('-seq_length', 6, 'number of timesteps to unroll for')   -- TO BE MODIFIED!!!
-cmd:option('-batch_size', 100, 'number of sequences to train on in parallel') --tttttttttttttttttttttt
+cmd:option('-dropout', 0.5, 'dropout for regularization, used after each RNN hidden layer. 0 = no dropout')
+cmd:option('-seq_length', 6, 'number of timesteps to unroll for')   -- 
+cmd:option('-batch_size', 100, 'number of sequences to train on in parallel') -- 
 cmd:option('-max_epochs', 10000, 'number of full passes through the training data')
-cmd:option('-grad_clip', 8, 'clip gradients at this value') -- ori 5
+cmd:option('-grad_clip', 8, 'clip gradients at this value') 
 cmd:option('-init_from', '', 'initialize network parameters from checkpoint at this path')
 -- bookkeeping
 cmd:option('-seed', 123, 'torch manual random number generator seed')
 cmd:option('-print_every', 1, 'how many steps/minibatches between printing out the loss')
-cmd:option('-eval_val_every', 2, 'every how many epochs should we evaluate on validation data?')
-cmd:option('-checkpoint_dir', 'cv_stlstmR128L2D0S6T3B100CS_J1ConnectLastBiTree_NoRelatPos_', 'output directory where checkpoints get written')
-cmd:option('-savefile', 'stlstm', 'filename to autosave the checkpont to. Will be inside checkpoint_dir/')
+cmd:option('-eval_val_every', 5, 'every how many epochs should we evaluate on validation data?')
+cmd:option('-checkpoint_dir', 'cv_stlstm3R128L2D0.5S6T3B100G-0.5CS_J1ConnectLastBiTree_NoRelatPos_', 'output directory where checkpoints get written')
+cmd:option('-savefile', 'stlstm3', 'filename to autosave the checkpont to. Will be inside checkpoint_dir/')
 cmd:option('-accurate_gpu_timing', 0, 'set this flag to 1 to get precise timings when using GPU. Might make code bit slower but reports accurate timings.')
 -- GPU/CPU
-cmd:option('-gpuid', 1, 'which gpu to use. -1 = use CPU')
+cmd:option('-gpuid', 0, 'which gpu to use. -1 = use CPU') 
 cmd:option('-opencl', 0, 'use OpenCL (instead of CUDA)')
 
 -- Evaluation Criteria
@@ -140,7 +141,11 @@ else
     elseif opt.model == 'rnn' then
         protos.rnn = RNN.rnn(vocab_size, loader.output_size, opt.rnn_size, opt.num_layers, opt.dropout)
     elseif opt.model == 'stlstm' then
-        protos.rnn = STLSTM.stlstm(TIME_SLIDE*3*2, loader.output_size, opt.rnn_size, opt.num_layers, opt.dropout) -- Pay attention to the first parameter!!!!!!!!!!
+        protos.rnn = STLSTM.stlstm(TIME_SLIDE*3*2, loader.output_size, opt.rnn_size, opt.num_layers, opt.dropout) 
+    elseif opt.model == 'stlstm2' then
+        protos.rnn = STLSTM2.stlstm2(TIME_SLIDE*3*2, loader.output_size, opt.rnn_size, opt.num_layers, opt.dropout) 
+    elseif opt.model == 'stlstm3' then
+        protos.rnn = STLSTM3.stlstm3(TIME_SLIDE*3*2, loader.output_size, opt.rnn_size, opt.num_layers, opt.dropout) 
     end
     protos.criterion = nn.ClassNLLCriterion()
 end
@@ -152,7 +157,7 @@ for L = 1, opt.num_layers do
     if opt.gpuid >=0 and opt.opencl == 0 then h_init = h_init:cuda() end
     if opt.gpuid >=0 and opt.opencl == 1 then h_init = h_init:cl() end
     table.insert(init_state, h_init:clone())
-    if opt.model == 'lstm' or opt.model == 'stlstm' then
+    if opt.model == 'lstm' or opt.model == 'stlstm' or opt.model == 'stlstm2' or opt.model == 'stlstm3' then
         table.insert(init_state, h_init:clone())
     end
 end
@@ -173,7 +178,7 @@ if do_random_init then
     params:uniform(-0.08, 0.08) -- small uniform numbers
 end
 -- initialize the LSTM forget gates with slightly higher biases to encourage remembering in the beginning
-if opt.model == 'stlstm' then
+if opt.model == 'stlstm' or opt.model == 'stlstm2' or opt.model == 'stlstm3' then
     for layer_idx = 1, opt.num_layers do
         for _, node in ipairs(protos.rnn.forwardnodes) do
             if node.data.annotations.name == "i2h_" .. layer_idx then
@@ -232,6 +237,9 @@ local val_predict
 local val_predict_W
 local val_gt_lables
 
+local val_input_gate
+local val_forget_gate
+
 
 if opt.gpuid >=0 then  -- TO BE MODIFIED!!!
 	tr_predict    = torch.CudaTensor(torch.floor(loader.nb_train)*loader.batch_size, loader.output_size):zero()
@@ -241,6 +249,9 @@ if opt.gpuid >=0 then  -- TO BE MODIFIED!!!
 	
 	tr_predict_W  = torch.CudaTensor(torch.floor(loader.nb_train)*loader.batch_size, loader.output_size):zero()
 	val_predict_W = torch.CudaTensor(loader.ns_val, loader.output_size):zero()
+	
+	val_input_gate_L1  = torch.CudaTensor(loader.ns_val, opt.seq_length * JOINT_NUM):zero()
+	val_forget_gate_L1 = torch.CudaTensor(loader.ns_val, opt.seq_length * JOINT_NUM):zero()
 else
 	tr_predict    = torch.Tensor(torch.floor(loader.nb_train)*loader.batch_size, loader.output_size):zero()
 	tr_gt_lables  = torch.Tensor(torch.floor(loader.nb_train)*loader.batch_size):zero()
@@ -249,6 +260,9 @@ else
 	
 	tr_predict_W  = torch.Tensor(torch.floor(loader.nb_train)*loader.batch_size, loader.output_size):zero()
 	val_predict_W = torch.Tensor(loader.ns_val, loader.output_size):zero()
+	
+	val_input_gate_L1  = torch.Tensor(loader.ns_val, opt.seq_length * JOINT_NUM):zero()
+	val_forget_gate_L1 = torch.Tensor(loader.ns_val, opt.seq_length * JOINT_NUM):zero()
 end
 
 -- evaluate the loss over an entire split
@@ -274,15 +288,26 @@ function eval_split(split_index, max_batches) -- Note: Currently, this function 
 		local predscores_W = (opt.gpuid >= 0) and 
 							torch.CudaTensor(loader.batch_size, loader.output_size):zero() or
 							torch.Tensor(    loader.batch_size, loader.output_size):zero()
+							
+		local input_gate_norm = (opt.gpuid >= 0) and 
+							torch.CudaTensor(loader.batch_size, opt.seq_length * JOINT_NUM):zero() or
+							torch.Tensor(    loader.batch_size, opt.seq_length * JOINT_NUM):zero()
+							
+		local forget_gate_norm = (opt.gpuid >= 0) and 
+							torch.CudaTensor(loader.batch_size, opt.seq_length * JOINT_NUM):zero() or
+							torch.Tensor(    loader.batch_size, opt.seq_length * JOINT_NUM):zero()
 						
 		if i == n and last_batch_has_dummy then
 			y = y[{{1, valid_sample_count_last_batch}}]
 			predscores = predscores[{{1, valid_sample_count_last_batch}, {}}]
 			predscores_W = predscores_W[{{1, valid_sample_count_last_batch}, {}}]
+			
+			input_gate_norm  = input_gate_norm[ {{1, valid_sample_count_last_batch}, {}}]
+			forget_gate_norm = forget_gate_norm[{{1, valid_sample_count_last_batch}, {}}]
 		end
         
         local CurrRnnIndx = 0
-        for t = 1, opt.seq_length do -- TO BE MODIFIED!!!
+        for t = 1, opt.seq_length do 
             for j = 1, JOINT_NUM do
                 CurrRnnIndx = CurrRnnIndx + 1
                 clones.rnn[CurrRnnIndx]:evaluate() -- for dropout proper functioning
@@ -323,10 +348,10 @@ function eval_split(split_index, max_batches) -- Note: Currently, this function 
                 if i == n and last_batch_has_dummy then
                     prediction = prediction[{{1, valid_sample_count_last_batch}, {}}]
                 end
-                -- maybe here we have to consider a portion of the last frames! not all!
                 predscores = predscores + prediction
                 predscores_W = predscores_W + prediction*CurrRnnIndx
-                loss = loss + clones.criterion[CurrRnnIndx]:forward(prediction, y) -- not y[t]! y is the same for all t!
+				
+                loss = loss + clones.criterion[CurrRnnIndx]:forward(prediction, y) --
             end
         end
         
@@ -339,7 +364,12 @@ function eval_split(split_index, max_batches) -- Note: Currently, this function 
 		val_predict[{{sam_idx_1, sam_idx_2}, {}}] = predscores
 		val_predict_W[{{sam_idx_1, sam_idx_2}, {}}] = predscores_W
 		val_gt_lables[{{sam_idx_1, sam_idx_2}}] = y
+		
+		-- val_input_gate_L1[{{sam_idx_1, sam_idx_2}, {}, {}}] = 
+		-- val_input_gate_L1[{{sam_idx_1, sam_idx_2}, {}, {}}] = 
+		
         -- carry over lstm state
+        --rnn_state[0] = rnn_state[#rnn_state] -- 
         print(i .. '/' .. n .. '...')
     end
         
@@ -408,14 +438,14 @@ function feval(x)
             for k, v in ipairs(rnn_state[preRnnIndexT]) do table.insert(tempInput, v) end                           
             local lst = clones.rnn[CurrRnnIndx]:forward(tempInput)
 
-            --graph.dot(clones.rnn[CurrRnnIndx].fg, 'Forward Graph', '/home/jliu/projects/tmp/fg') -- can be commented, just draw a figure
+            
             rnn_state[CurrRnnIndx] = {}  
             for index = 1, #init_state do table.insert(rnn_state[CurrRnnIndx], lst[index]) end  
             predictions[CurrRnnIndx] = lst[#lst] 
-            -- maybe here we have to consider a portion of the last frames! not all!
+           
             predscores = predscores + predictions[CurrRnnIndx]
             predscores_W = predscores_W + predictions[CurrRnnIndx]*CurrRnnIndx
-            loss = loss + clones.criterion[CurrRnnIndx]:forward(predictions[CurrRnnIndx], y) -- not y[t]! y is the same for all t!
+            loss = loss + clones.criterion[CurrRnnIndx]:forward(predictions[CurrRnnIndx], y)
         end
     end
     loss = loss / (opt.seq_length * JOINT_NUM)
@@ -438,7 +468,7 @@ function feval(x)
     for t = opt.seq_length, 1, -1 do
         for j = JOINT_NUM, 1, -1 do 
             -- backprop through loss, and softmax/linear
-            local doutput_t = clones.criterion[CurrRnnIndx]:backward(predictions[CurrRnnIndx], y) -- ????? why y[t], rather than y?
+            local doutput_t = clones.criterion[CurrRnnIndx]:backward(predictions[CurrRnnIndx], y) 
             table.insert(drnn_state[CurrRnnIndx], doutput_t) -- drnn includes two part: 1) from t + 1, 2) from criterion -- TO BE MODIFIED!!!
             assert (#(drnn_state[CurrRnnIndx]) == (#init_state)+1)
             
@@ -493,8 +523,10 @@ end
 
 function evaluate_classification()
     local current_errorrate = {}
+	
 	local confuseMatrix3 = torch.zeros(loader.output_size, loader.output_size)
 	local confuseMatrix4 = torch.zeros(loader.output_size, loader.output_size)
+	
     for splidx = 1, 4 do
 		local scores
 		local gtruth
@@ -524,6 +556,7 @@ function evaluate_classification()
 		end
 		errorrates = errorrates * 100 / scores:size(1)
 		current_errorrate[splidx] = errorrates
+		
 		local maxscores, maxpositions = torch.max(scores, 2)
 		if (splidx == 3) then 
 			for i = 1, scores:size(1) do
@@ -533,7 +566,8 @@ function evaluate_classification()
 			for i = 1, scores:size(1) do
 				confuseMatrix4[gtruth[i]][maxpositions[i][1]] = confuseMatrix4[gtruth[i]][maxpositions[i][1]] + 1
 			end
-	end	
+		end
+		
 	end	
 	return current_errorrate,confuseMatrix3,confuseMatrix4
 end
@@ -554,11 +588,7 @@ for i = (opt.startingiter or 1), (iterations + 1) do
 	if torch.floor(epoch) > torch.floor(lastepoch) then -- it's a new epoch!
 		if epoch % opt.eval_val_every == 0 then			
 			-- evaluate loss on validation data
-			local starttime = os.time();
 			local val_loss = eval_split(2) -- 2 = validation
-			local endtime = os.time();
-			print(' Run time (seconds): ' .. (endtime-starttime) .. ' Validation samples:' .. loader.ns_val)
-			
 			val_losses[i] = val_loss
 			
 			print('Validation loss: ' .. tostring(val_loss))
@@ -581,6 +611,7 @@ for i = (opt.startingiter or 1), (iterations + 1) do
 			checkpoint.epoch = epoch
 			--checkpoint.vocab = loader.vocab_mapping
 			torch.save(savefile, checkpoint)
+			
 			local confuseMatrix3_1 = {}
 			for i = 1, confuseMatrix3:size(1) do
 				confuseMatrix3_1[i] = {}
@@ -589,6 +620,7 @@ for i = (opt.startingiter or 1), (iterations + 1) do
 				end
 			end
 			--csvigo.save{path = savefile..'_train.csv', data = confuseMatrix3_1}
+				
 			local confuseMatrix4_1 = {}
 			for i = 1, confuseMatrix4:size(1) do
 				confuseMatrix4_1[i] = {}
