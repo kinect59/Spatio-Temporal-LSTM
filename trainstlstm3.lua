@@ -11,6 +11,8 @@ The practical6 code is in turn based on
 https://github.com/wojciechz/learning_to_execute
 which is turn based on other stuff in Torch, etc... (long lineage)
 
+The code is built on [char-rnn](https://github.com/karpathy/char-rnn).
+Thanks for the open source from Andrej Karpathy.
 ]]--
 
 package.loaded.SkeletonMinibatchLoader = nil
@@ -209,13 +211,13 @@ local USE_RELATIVE_POSITION = false -- use the relative position of the previous
 
 -- make a bunch of clones after flattening, as that reallocates memory
 clones = {}
-for name, proto in pairs(protos) do  -- TO BE MODIFIED!!! May be clones.rnn[J][T], clones.criterion[J][T]?
+for name, proto in pairs(protos) do  
     print('cloning ' .. name)
     clones[name] = model_utils.clone_many_times(proto, JOINT_NUM*opt.seq_length, not proto.parameters) -- the 3rd parameter is not used!
 end
 
 -- preprocessing helper function
-function prepro(x, y)  -- TO BE MODIFIED!!!
+function prepro(x, y)  
     --x = x:transpose(1,2):contiguous() -- swap the axes for faster indexing
     -- y = y:transpose(1,2):contiguous() -- no need for y
     if opt.gpuid >= 0 and opt.opencl == 0 then -- ship the input arrays to GPU
@@ -241,7 +243,7 @@ local val_input_gate
 local val_forget_gate
 
 
-if opt.gpuid >=0 then  -- TO BE MODIFIED!!!
+if opt.gpuid >=0 then  
 	tr_predict    = torch.CudaTensor(torch.floor(loader.nb_train)*loader.batch_size, loader.output_size):zero()
 	tr_gt_lables  = torch.CudaTensor(torch.floor(loader.nb_train)*loader.batch_size):zero()
 	val_predict   = torch.CudaTensor(loader.ns_val, loader.output_size):zero()
@@ -469,7 +471,7 @@ function feval(x)
         for j = JOINT_NUM, 1, -1 do 
             -- backprop through loss, and softmax/linear
             local doutput_t = clones.criterion[CurrRnnIndx]:backward(predictions[CurrRnnIndx], y) 
-            table.insert(drnn_state[CurrRnnIndx], doutput_t) -- drnn includes two part: 1) from t + 1, 2) from criterion -- TO BE MODIFIED!!!
+            table.insert(drnn_state[CurrRnnIndx], doutput_t) -- drnn includes two part: 1) from t + 1, 2) from criterion  
             assert (#(drnn_state[CurrRnnIndx]) == (#init_state)+1)
             
             local CurrJointIndex = order_joint[j]
@@ -514,7 +516,7 @@ function feval(x)
     ------------------------ misc ----------------------
     -- transfer final state to initial state (BPTT)
 	
-	-- init_state_global = rnn_state[#rnn_state] -- NOTE: I don't think this needs to be a clone, right?
+	-- init_state_global = rnn_state[#rnn_state] --  
     --grad_params:div(opt.seq_length * JOINT_NUM) -- this line should be here but since we use rmsprop it would have no effect. Removing for efficiency
     -- clip gradient element-wise
     grad_params:clamp(-opt.grad_clip, opt.grad_clip)

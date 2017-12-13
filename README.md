@@ -25,4 +25,4 @@ J. Liu, A. Shahroudy, D. Xu, A. Kot, G. Wang, Skeleton-based action recognition 
 J. Liu, G. Wang, P. Hu, L. Duan, A. Kot, Global context-aware attention LSTM networks for 3D action recognition, CVPR, 2017.
 
 The code is built on [char-rnn](https://github.com/karpathy/char-rnn).
-Thanks for the open source from Andrej Karpathy‏Verified.
+Thanks for the open source from Andrej Karpathy‏.
