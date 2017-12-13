@@ -1,4 +1,4 @@
-# Spatio-temporal LSTM (ST-LSTM).
+# Spatio-temporal LSTM (ST-LSTM)
 
 ```
 @inproceedings{liu2016spatio,
