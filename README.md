@@ -1,4 +1,4 @@
-# Spatio-temporal LSTM (ST-LSTM)
+# Spatio-Temporal LSTM (ST-LSTM) with Trust Gates for 3D Human Action Recognition
 
 ```
 @inproceedings{liu2016spatio,
@@ -8,6 +8,10 @@
   year={2016},
 }
 ```
+
+To run this code, make sure the following are installed:
+* Torch7
+* csvigo
 
 To test the method on [NTU RGB+D dataset](https://github.com/shahroudy/NTURGB-D), 
 please put the files "skl.csv", "descs.csv", and "training_testing_subjects.csv" in the folder "/data/". 
@@ -25,4 +29,4 @@ J. Liu, A. Shahroudy, D. Xu, A. Kot, G. Wang, Skeleton-based action recognition 
 J. Liu, G. Wang, P. Hu, L. Duan, A. Kot, Global context-aware attention LSTM networks for 3D action recognition, CVPR, 2017.
 
 The code is built on [char-rnn](https://github.com/karpathy/char-rnn).
-Thanks for the open source from Andrej Karpathy‏.
+Thanks to Andrej Karpathy‏.
