@@ -9,9 +9,7 @@
 }
 ```
 
-To run this code, make sure the following are installed:
-* Torch7
-* csvigo
+To run this code, first install [Torch7](http://torch.ch/docs/getting-started.html#_), then install csvigo by using luarocks (luarocks install csvigo).
 
 To test the method on [NTU RGB+D dataset](https://github.com/shahroudy/NTURGB-D), 
 please put the files "skl.csv", "descs.csv", and "training_testing_subjects.csv" in the folder "/data/". 
